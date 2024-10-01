@@ -1,12 +1,12 @@
 from django.shortcuts import render
 from django.http import HttpResponse
 from mongoengine import connection
-# from .models import Event
+from .models import Event
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .models import TodoItem
-from .serializers import TodoItemSerializer
+from .serializers import TodoItemSerializer,UserSerializer
 
 @api_view(['POST'])
 def create_todo(request):
@@ -50,24 +50,42 @@ def delete_todo(request, pk):
                         status=status.HTTP_404_NOT_FOUND
                         )
 
+@api_view(['POST'])
+def register_user(request):
+    if request.method == 'POST':
+        serializer =UserSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'message': 'User registered successfully!'}, status=status.HTTP_201_CREATED)
+        Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST) 
 
-# def test_mongodb_connection(request):
-#     # Check if MongoDB is connected
-#     try:
-#         # List all MongoDB connections
-#         connections = connection._connections
-#         if connections:
-#             # Test creating and retrieving a document
-#             event = Event(title="Test Event", date="2024-09-30", description="Testing MongoDB connection")
-#             event.save()  # Save the event to MongoDB
+
+
+
+
+
+
+
+
+
+
+def test_mongodb_connection(request):
+    # Check if MongoDB is connected
+    try:
+        # List all MongoDB connections
+        connections = connection._connections
+        if connections:
+            # Test creating and retrieving a document
+            event = Event(title="Test Event", date="2024-09-30", description="Testing MongoDB connection")
+            event.save()  # Save the event to MongoDB
             
-#             # Check if document was saved successfully
-#             saved_event = Event.objects(title="Test Event").first()
-#             if saved_event:
-#                 return HttpResponse("MongoDB is connected and working. Event created: " + saved_event.title)
-#             else:
-#                 return HttpResponse("MongoDB is connected, but could not save the event.")
-#         else:
-#             return HttpResponse("MongoDB is not connected.")
-#     except Exception as e:
-#         return HttpResponse(f"An error occurred: {str(e)}")
+            # Check if document was saved successfully
+            saved_event = Event.objects(title="Test Event").first()
+            if saved_event:
+                return HttpResponse("MongoDB is connected and working. Event created: " + saved_event.title)
+            else:
+                return HttpResponse("MongoDB is connected, but could not save the event.")
+        else:
+            return HttpResponse("MongoDB is not connected.")
+    except Exception as e:
+        return HttpResponse(f"An error occurred: {str(e)}")

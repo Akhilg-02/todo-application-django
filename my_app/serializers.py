@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import TodoItem
+from .models import User
 
 class TodoItemSerializer(serializers.Serializer):
     title = serializers.CharField(max_length=200)
@@ -15,3 +16,19 @@ class TodoItemSerializer(serializers.Serializer):
         instance.completed = validated_data.get('completed', instance.completed)
         instance.save()
         return instance
+    
+
+class UserSerializer(serializers.Serializer):
+    username = serializers.CharField(max_length=100)
+    email = serializers.EmailField()
+    password = serializers.CharField(write_only = True)
+
+    def create(self, validated_data):
+        user = User(
+            username = validated_data['username'],
+            email= validated_data['email']
+        )
+
+        user.set_password(validated_data['password'])
+        user.save()
+        return user
