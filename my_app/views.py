@@ -1,7 +1,8 @@
 from django.shortcuts import render
 from django.http import HttpResponse
-from mongoengine import connection
-from .models import Event
+from mongoengine import connection,DoesNotExist
+from .models import Event,User
+from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -56,17 +57,27 @@ def register_user(request):
         serializer =UserSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response({'message': 'User registered successfully!'}, status=status.HTTP_201_CREATED)
-        Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST) 
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        # {'message': 'User registered successfully!'}, 
 
 
+@api_view(['POST'])
+def login_user(request):
+    if request.method == 'POST':
+        username = request.data.get('username')
+        password = request.data.get('password')
 
+    try:
+        user = User.objects.get(username = username)
+        if user.check_password(password):
+            refresh = RefreshToken.for_user(user)
+            access = str(refresh.access_token)
+            return Response({"refresh": str(refresh), "access": access}, status=status.HTTP_200_OK)
+        return Response({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
 
-
-
-
-
-
+    except DoesNotExist:
+            return Response({'error": "Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
 
 
 def test_mongodb_connection(request):
